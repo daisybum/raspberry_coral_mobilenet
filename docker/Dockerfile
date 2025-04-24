@@ -51,6 +51,8 @@ RUN set -eux; \
         libedgetpu1-std \
         python3-pycoral \
         python3-tflite-runtime \
+        libusb-1.0-0          \  # ← USB 런타임 의존성
+        udev                  \  # ← 65-edgetpu-accelerator.rules 포함
         libhdf5-dev \
         python3-picamera2; \
     rm -rf /var/lib/apt/lists/*
