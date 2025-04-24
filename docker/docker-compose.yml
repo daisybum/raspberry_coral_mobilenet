@@ -1,11 +1,11 @@
 # docker/docker-compose.yml
 version: "3.9"
 services:
-  coral_inference:
+  coral_mobilnet:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
-    container_name: coral_inference
+    container_name: coral_mobilenet
 
     ## 1) 카메라 노드와 메모리 풀 전체 전달
     privileged: true          # capabilities + cgroup rules
