@@ -19,7 +19,7 @@ from pycoral.utils import edgetpu
 from pycoral.adapters import common, classify  # ⬅️ pycoral API
 
 # ─── 0. 경로 설정 ───────────────────────────────────────────────
-IMAGE_DIR   = Path('/workspace/testset')      # 클래스별 하위 폴더
+IMAGE_DIR   = Path('/workspace/dataset/testset')      # 클래스별 하위 폴더
 MODEL_PATH  = Path('models/mobilenet_int8.tflite')
 TOP_K       = 1                               # Top-k 결과 중 하나만 사용
 
