@@ -1,7 +1,7 @@
 # docker/docker-compose.yml
 version: "3.9"
 services:
-  coral_mobilnet:
+  coral_mobilenet:
     build:
       context: ..
       dockerfile: ./docker/Dockerfile
