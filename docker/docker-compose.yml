@@ -21,7 +21,7 @@ services:
     ## 2) udev 이벤트 전달
     volumes:
       - /run/udev:/run/udev:ro   # ★ 중요
-      - /mnt/usb:/workspace/dataset
+      - /dev/sda1:/workspace/dataset
       - ../:/workspace
 
     ## 3) 성능/메모리
