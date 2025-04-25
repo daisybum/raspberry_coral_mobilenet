@@ -23,6 +23,7 @@ services:
 
     ## 2) udev 이벤트 전달
     volumes:
+      - /dev/bus/usb:/dev/bus/usb   # /dev/bus/usb 전체를 볼륨으로 마운트
       - /run/udev:/run/udev:ro   # ★ 중요
       - /mnt/usb:/workspace/dataset
       - ../:/workspace
