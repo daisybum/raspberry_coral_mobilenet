@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 # ─── 0. 경로 설정 ───────────────────────────────────────────────
 IMAGE_DIR = Path('/workspace/dataset/testset')
-MODEL_PATH = Path('models/mobilenet_int8.tflite')
+MODEL_PATH = Path('models/mobilenet_int8_edgetpu.tflite')
 TOP_K = 1
 
 logger.info("경로 설정 완료.")
