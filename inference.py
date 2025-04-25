@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image
 from pathlib import Path
 from collections import defaultdict, Counter
+from tqdm import tqdm
 
 from pycoral.utils import edgetpu
 from pycoral.adapters import common, classify
@@ -61,7 +62,7 @@ for cls_dir in IMAGE_DIR.iterdir():
     true_idx = class_to_index[cls_dir.name]
     logger.info(f"클래스 '{cls_dir.name}' 이미지 처리 시작.")
 
-    for img_path in cls_dir.glob('*'):
+    for img_path in tqdm(cls_dir.glob('*')):
         img_np = preprocess(img_path)
         t0 = time.perf_counter()
         preds = infer(img_np)
