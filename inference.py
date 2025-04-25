@@ -28,7 +28,7 @@ TOP_K = 1
 logger.info("경로 설정 완료.")
 
 # ─── 1. Edge TPU 인터프리터 초기화 ───────────────────────────────
-interpreter = edgetpu.make_interpreter(str(MODEL_PATH))
+interpreter = edgetpu.make_interpreter(str(MODEL_PATH), device="usb")
 interpreter.allocate_tensors()
 
 input_width, input_height = common.input_size(interpreter)
