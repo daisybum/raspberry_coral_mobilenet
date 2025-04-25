@@ -9,8 +9,11 @@ services:
 
     ## 1) 카메라 노드와 메모리 풀 전체 전달
     privileged: true          # capabilities + cgroup rules
+
     devices:
-      - "/dev:/dev"           # ← /dev 전체를 그대로 넘겨도 되고,
+      - /dev/bus/usb          # /dev 전체 대신 USB 만도 OK
+    # devices:
+    #   - "/dev:/dev"           # ← /dev 전체를 그대로 넘겨도 되고,
     #  또는 필요한 노드만 나열:
     #  - "/dev/vchiq:/dev/vchiq"
     #  - "/dev/video0:/dev/video0"
@@ -29,7 +32,7 @@ services:
       - /dev/shm:size=64m,exec   # libcamera-vid 의 DMA 버퍼가 /dev/shm 사용
 
     group_add:
-      - video
+      - plugdev
 
     command: tail -f /dev/null
     restart: unless-stopped
