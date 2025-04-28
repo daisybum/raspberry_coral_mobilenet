@@ -20,7 +20,7 @@ delegate = load_delegate('libedgetpu.so.1')
 print("Delegate loaded successfully:", delegate)
 # 2) Create Interpreter
 interpreter = Interpreter(
-    model_path='models/mobilenet_int8_edgetpu.tflite',
+    model_path='models/mobilenet_int8.tflite',
     experimental_delegates=[delegate]
 )
 interpreter.allocate_tensors()
