@@ -1,29 +1,38 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Edge TPU MobileNetV3-Large Inference Script (with Logger)
-"""
-import os, time, json, itertools, logging
+import os, time, logging
 import numpy as np
-from PIL import Image
-from pathlib import Path
-from collections import defaultdict, Counter
-from tqdm import tqdm
-from pycoral.utils import edgetpu
-from pycoral.adapters import common, classify
 from tflite_runtime.interpreter import Interpreter, load_delegate
-import os, time
-# Enable internal logging
-os.environ['EDGETPU_LOG'] = '1'
-# 1) Load Delegate
+
+# …(중략)…
+
+# 1) Delegate 로드
 delegate = load_delegate('libedgetpu.so.1')
-print("Delegate loaded successfully:", delegate)
-# 2) Create Interpreter
+
+# 2) Interpreter 생성
 interpreter = Interpreter(
     model_path='models/mobilenet_int8_edgetpu.tflite',
     experimental_delegates=[delegate]
 )
 interpreter.allocate_tensors()
-# 3) Check input/output information
-print("Input details:", interpreter.get_input_details())
-print("Output details:", interpreter.get_output_details())
+
+# 3) input/output details 받아오기
+input_details  = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
+
+# 4) numpy 배열 -> 리스트 변환 후 출력
+for idx, detail in enumerate(input_details):
+    print(f"=== Input detail #{idx} ===")
+    for k, v in detail.items():
+        if isinstance(v, np.ndarray):
+            print(f"{k}: {v.tolist()}")
+        else:
+            print(f"{k}: {v}")
+    print()
+
+for idx, detail in enumerate(output_details):
+    print(f"=== Output detail #{idx} ===")
+    for k, v in detail.items():
+        if isinstance(v, np.ndarray):
+            print(f"{k}: {v.tolist()}")
+        else:
+            print(f"{k}: {v}")
+    print()
