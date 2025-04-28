@@ -11,7 +11,7 @@ from tqdm import tqdm
 from pycoral.utils import edgetpu
 from pycoral.adapters import common, classify
 
-# 로거 초기화
+# logger initialization
 logging.basicConfig(
     level=logging.INFO,
     format='[%(asctime)s][%(levelname)s] %(message)s',
@@ -19,23 +19,23 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ─── 0. Edge TPU 탐지 ────────────────────────────────────────
+# ─── 0. Edge TPU detection ─────────────────────────────────────
 devices = edgetpu.list_edge_tpus()
 using_tpu = bool(devices)
 
 if using_tpu:
-    logger.info(f"✅ Edge TPU 장치 발견: {devices} – TPU에서 실행합니다.")
+    logger.info(f"✅ Edge TPU detected: {devices} – running on TPU.")
 else:
-    logger.warning("⚠️ Edge TPU 미발견 – CPU 모드로 실행합니다.")
+    logger.warning("⚠️ No Edge TPU detected – running in CPU mode.")
 
-# ─── 0. 경로 설정 ───────────────────────────────────────────────
+# ─── 1. Path configuration ─────────────────────────────────────
 IMAGE_DIR = Path('/workspace/testset')
 MODEL_PATH = Path('models/mobilenet_int8_edgetpu.tflite')
 TOP_K = 1
 
-logger.info("경로 설정 완료.")
+logger.info("Path configuration completed.")
 
-# ─── 1. 인터프리터 초기화 ───────────────────────────────────────
+# ─── 2. Interpreter initialization ─────────────────────────────
 if using_tpu:
     interpreter = edgetpu.make_interpreter(str(MODEL_PATH), device="usb")
 else:
@@ -44,26 +44,30 @@ else:
 
 interpreter.allocate_tensors()
 
-# Delegate 로드 확인 (tflite_runtime에서는 private 속성일 수 있음)
+# Check loaded delegates (may be a private attribute)
 loaded_delegates = getattr(interpreter, "_delegates", None)
 if loaded_delegates:
-    logger.info(f"로딩된 Delegate: {loaded_delegates}")
+    logger.info(f"Loaded delegate: {loaded_delegates}")
 else:
-    logger.info("로딩된 Delegate 없음 (CPU 모드)")
+    logger.info("No delegates loaded (CPU mode)")
 
 input_width, input_height = common.input_size(interpreter)
-logger.info(f"모델 입력 크기: {input_width}×{input_height} RGB")
+logger.info(f"Model input size: {input_width}×{input_height} RGB")
 
-# ─── 2. 클래스 라벨 추출(폴더명 기준) ────────────────────────────
-class_to_index = {cls: idx for idx, cls in
-                  enumerate(sorted([d.name for d in IMAGE_DIR.iterdir() if d.is_dir()]))}
+# ─── 3. Load class labels (from folder names) ────────────────
+class_to_index = {
+    cls: idx
+    for idx, cls in enumerate(sorted([d.name for d in IMAGE_DIR.iterdir() if d.is_dir()]))
+}
 index_to_class = {v: k for k, v in class_to_index.items()}
 
-logger.info(f"클래스 라벨 추출 완료: {json.dumps(index_to_class, ensure_ascii=False)}")
+logger.info(f"Class labels loaded: {json.dumps(index_to_class, ensure_ascii=False)}")
 
-# ─── 3. 보조 함수: 전처리 & 추론 ────────────────────────────────
+# ─── 4. Helper functions: preprocess & infer ─────────────────
 def preprocess(img_path):
-    img = Image.open(img_path).convert('RGB').resize((input_width, input_height), Image.BILINEAR)
+    img = Image.open(img_path).convert('RGB').resize(
+        (input_width, input_height), Image.BILINEAR
+    )
     return np.asarray(img).astype(np.uint8)
 
 def infer(image_np):
@@ -72,7 +76,7 @@ def infer(image_np):
     classes = classify.get_classes(interpreter, top_k=TOP_K)
     return [(c.id, c.score) for c in classes]
 
-# ─── 4. 전체 이미지 순회 ────────────────────────────────────────
+# ─── 5. Iterate over all images ───────────────────────────────
 results = defaultdict(list)
 latencies = []
 
@@ -80,7 +84,7 @@ for cls_dir in IMAGE_DIR.iterdir():
     if not cls_dir.is_dir():
         continue
     true_idx = class_to_index[cls_dir.name]
-    logger.info(f"클래스 '{cls_dir.name}' 이미지 처리 시작.")
+    logger.info(f"Starting processing for class '{cls_dir.name}'.")
 
     for img_path in tqdm(cls_dir.glob('*')):
         img_np = preprocess(img_path)
@@ -92,9 +96,12 @@ for cls_dir in IMAGE_DIR.iterdir():
         pred_idx, score = preds[0]
         results[true_idx].append((pred_idx, score))
 
-    logger.info(f"클래스 '{cls_dir.name}' 이미지 처리 완료. 총 {len(results[true_idx])}장 처리.")
+    logger.info(
+        f"Completed processing for class '{cls_dir.name}'. "
+        f"Total images: {len(results[true_idx])}."
+    )
 
-# ─── 5. 지표 계산 ────────────────────────────────────────────────
+# ─── 6. Compute metrics ────────────────────────────────────────
 total, correct = 0, 0
 confusion = Counter()
 
@@ -108,12 +115,11 @@ for true_idx, lst in results.items():
 acc = correct / total if total else 0
 avg_latency = np.mean(latencies) * 1000
 
-# ─── 6. 리포트 출력 ─────────────────────────────────────────────
-logger.info(f"전체 이미지 수: {total}")
-logger.info(f"Top-1 정확도 : {acc:.4%}")
-logger.info(f"평균 추론 시간: {avg_latency:.2f} ms (Edge TPU)")
-
-logger.info("혼동 행렬(샘플 수 ≥1인 항목):")
+# ─── 7. Report ────────────────────────────────────────────────
+logger.info(f"Total image count: {total}")
+logger.info(f"Top-1 accuracy: {acc:.4%}")
+logger.info(f"Average inference time: {avg_latency:.2f} ms (Edge TPU)")
+logger.info("Confusion matrix (entries ≥1):")
 for (t, p), n in sorted(confusion.items()):
     if n > 0:
         logger.info(f"{index_to_class[t]:<20} → {index_to_class[p]:<20}: {n}")
