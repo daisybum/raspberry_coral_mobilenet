@@ -28,6 +28,13 @@ if using_tpu:
 else:
     logger.warning("⚠️ Edge TPU 미발견 – CPU 모드로 실행합니다.")
 
+# ─── 0. 경로 설정 ───────────────────────────────────────────────
+IMAGE_DIR = Path('/workspace/testset')
+MODEL_PATH = Path('models/mobilenet_int8_edgetpu.tflite')
+TOP_K = 1
+
+logger.info("경로 설정 완료.")
+
 # ─── 1. 인터프리터 초기화 ───────────────────────────────────────
 if using_tpu:
     interpreter = edgetpu.make_interpreter(str(MODEL_PATH), device="usb")
