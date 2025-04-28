@@ -77,10 +77,6 @@ for cls_dir in IMAGE_DIR.iterdir():
         pred_idx, score = preds[0]
         results[true_idx].append((pred_idx, score))
 
-        print ("Sleep 10 seconds from now on...")
-        time.sleep(10)
-        print("wake up!")
-
     logger.info(f"클래스 '{cls_dir.name}' 이미지 처리 완료. 총 {len(results[true_idx])}장 처리.")
 
 # ─── 5. 지표 계산 ────────────────────────────────────────────────
