@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Edge TPU MobileNetV3-Large 추론 스크립트 (Logger 포함)
-"""
 
-import os, time, json, itertools, logging
+import os, time, json, logging
 import numpy as np
 from PIL import Image
 from pathlib import Path
@@ -15,26 +12,37 @@ from pycoral.utils import edgetpu
 from pycoral.adapters import common, classify
 
 # 로거 초기화
-logging.basicConfig(level=logging.INFO,
-                    format='[%(asctime)s][%(levelname)s] %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(asctime)s][%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 logger = logging.getLogger(__name__)
 
+# ─── 0. Edge TPU 탐지 ────────────────────────────────────────
 devices = edgetpu.list_edge_tpus()
-logger.info(f"Detected Edge TPU devices: {devices}")
-if not devices:
-    logger.error("⚠️ Edge TPU 장치 미발견 – CPU로 추론 폴백합니다.")
+using_tpu = bool(devices)
 
-# ─── 0. 경로 설정 ───────────────────────────────────────────────
-IMAGE_DIR = Path('/workspace/testset')
-MODEL_PATH = Path('models/mobilenet_int8_edgetpu.tflite')
-TOP_K = 1
+if using_tpu:
+    logger.info(f"✅ Edge TPU 장치 발견: {devices} – TPU에서 실행합니다.")
+else:
+    logger.warning("⚠️ Edge TPU 미발견 – CPU 모드로 실행합니다.")
 
-logger.info("경로 설정 완료.")
+# ─── 1. 인터프리터 초기화 ───────────────────────────────────────
+if using_tpu:
+    interpreter = edgetpu.make_interpreter(str(MODEL_PATH), device="usb")
+else:
+    from tflite_runtime.interpreter import Interpreter
+    interpreter = Interpreter(model_path=str(MODEL_PATH))
 
-# ─── 1. Edge TPU 인터프리터 초기화 ───────────────────────────────
-interpreter = edgetpu.make_interpreter(str(MODEL_PATH), device="usb")
 interpreter.allocate_tensors()
+
+# Delegate 로드 확인 (tflite_runtime에서는 private 속성일 수 있음)
+loaded_delegates = getattr(interpreter, "_delegates", None)
+if loaded_delegates:
+    logger.info(f"로딩된 Delegate: {loaded_delegates}")
+else:
+    logger.info("로딩된 Delegate 없음 (CPU 모드)")
 
 input_width, input_height = common.input_size(interpreter)
 logger.info(f"모델 입력 크기: {input_width}×{input_height} RGB")
