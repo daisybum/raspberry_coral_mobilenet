@@ -17,7 +17,7 @@ import os, time
 os.environ['EDGETPU_LOG'] = '1'
 # 1) Load Delegate
 delegate = load_delegate('libedgetpu.so.1')
-print("▶ Delegate loaded successfully:", delegate)
+print("Delegate loaded successfully:", delegate)
 # 2) Create Interpreter
 interpreter = Interpreter(
     model_path='models/your_model_edgetpu.tflite',
@@ -25,8 +25,8 @@ interpreter = Interpreter(
 )
 interpreter.allocate_tensors()
 # 3) Check input/output information
-print("▶ Input details:", interpreter.get_input_details())
-print("▶ Output details:", interpreter.get_output_details())
+print("Input details:", interpreter.get_input_details())
+print("Output details:", interpreter.get_output_details())
 # ─── 0. Path Configuration ───────────────────────────────────────────────
 IMAGE_DIR = Path('/workspace/testset')
 MODEL_PATH = Path('models/mobilenet_int8_edgetpu.tflite')
