@@ -20,6 +20,11 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger(__name__)
 
+devices = edgetpu.list_edge_tpus()
+logger.info(f"Detected Edge TPU devices: {devices}")
+if not devices:
+    logger.error("⚠️ Edge TPU 장치 미발견 – CPU로 추론 폴백합니다.")
+
 # ─── 0. 경로 설정 ───────────────────────────────────────────────
 IMAGE_DIR = Path('/workspace/dataset/testset')
 MODEL_PATH = Path('models/mobilenet_int8_edgetpu.tflite')
