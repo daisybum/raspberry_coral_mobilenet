@@ -31,16 +31,9 @@ else:
     print("No Delegate loaded (Running on CPU)")
 
 # 3. Check for Edge TPU custom operations in the model
+print(len(interpreter._get_ops_details()))
 for op_index in range(len(interpreter._get_ops_details())):
+    print(op_index, interpreter._get_op_details(op_index)['op_name'])
     if interpreter._get_op_details(op_index)['op_name'] == 'edgetpu-custom-op':
         print("✔️  edgetpu-custom-op 발견 → Edge TPU 가속 활성")
         break
-
-import time, numpy as np
-input_details = interpreter.get_input_details()
-dummy = np.zeros(input_details[0]['shape'], dtype=input_details[0]['dtype'])
-interpreter.set_tensor(input_details[0]['index'], dummy)
-
-t0 = time.perf_counter()
-interpreter.invoke()
-print(f"1회 invoke 시간: {(time.perf_counter()-t0)*1e3:.2f} ms")
