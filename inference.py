@@ -105,21 +105,39 @@ for cls_dir in IMAGE_DIR.iterdir():
 total, correct = 0, 0
 confusion = Counter()
 
+# ★ NEW: per-class counters
+per_class_total   = Counter()   # 각 클래스를 몇 번 평가했는가
+per_class_correct = Counter()   # 각 클래스가 맞은 횟수
+
 for true_idx, lst in results.items():
     for pred_idx, _ in lst:
         confusion[(true_idx, pred_idx)] += 1
-        total += 1
+        per_class_total[true_idx]   += 1       # ★ NEW
         if pred_idx == true_idx:
-            correct += 1
+            correct                 += 1
+            per_class_correct[true_idx] += 1   # ★ NEW
+        total += 1
 
 acc = correct / total if total else 0
 avg_latency = np.mean(latencies) * 1000
+
+# ★ NEW: 클래스별 정확도 계산
+class_acc = {
+    index_to_class[idx]: per_class_correct[idx] / per_class_total[idx]
+    for idx in per_class_total
+}
 
 # ─── 7. Report ────────────────────────────────────────────────
 logger.info(f"Total image count: {total}")
 logger.info(f"Top-1 accuracy: {acc:.4%}")
 logger.info(f"Average inference time: {avg_latency:.2f} ms (Edge TPU)")
+
+# ★ NEW: 클래스별 정확도 출력
+logger.info("Per-class accuracy:")
+for cls_name, a in sorted(class_acc.items()):
+    logger.info(f"  {cls_name:<20}: {a:.4%}")
+
 logger.info("Confusion matrix (entries ≥1):")
 for (t, p), n in sorted(confusion.items()):
-    if n > 0:
+    if n:
         logger.info(f"{index_to_class[t]:<20} → {index_to_class[p]:<20}: {n}")
