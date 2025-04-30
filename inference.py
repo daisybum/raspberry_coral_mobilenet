@@ -30,7 +30,7 @@ else:
 
 # ─── 1. Path configuration ─────────────────────────────────────
 IMAGE_DIR = Path('/workspace/testset')
-MODEL_PATH = Path('models/mobilenet_int8_edgetpu.tflite')
+MODEL_PATH = Path('models/model_quant_edgetpu.tflite')
 TOP_K = 1
 
 logger.info("Path configuration completed.")
